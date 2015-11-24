@@ -1,12 +1,16 @@
  /* calculator */
 %option nounistd
 %option interactive
-
+%option noyywrap
+%option reentrant
+%option extra-type="ParseContext*"
+%option bison-bridge
 %{
 	#include <string>
+	#include "parsecontext.h"
 	#include "calculator.tab.h"
 	#include <stdlib.h>
-	void yyerror(char *);
+	void yyerror(ParseContext*,const char *);
 	int isatty(int fd) {return 1;}
 	
 	#ifdef _MSC_VER
@@ -18,12 +22,12 @@
 exit|quit { return QUIT; }
 
 [a-zA-Z]+ {
-	yylval.strval = new std::string(yytext);
+	yylval->strval = new std::string(yytext);
 	return VARIABLE;
 }
 
 [0-9]+ {
-	yylval.intval = atoi(yytext);
+	yylval->intval = atoi(yytext);
 	return INTEGER;
 }
 
@@ -33,10 +37,21 @@ exit|quit { return QUIT; }
 
 [ \t] ; /* skip whitespace */
 
-. yyerror("Unknown character");
+. yyerror(yyextra,"Unknown character");
 
 %%
 
-int yywrap(void) {
-	return 1;
+ParseContext::ParseContext()
+{
+	yylex_init(&scanner);
+	yyset_extra(this, scanner);
 }
+
+ParseContext::~ParseContext()
+{
+	yylex_destroy(scanner);
+}
+
+// int yywrap(void) {
+	// return 1;
+// }

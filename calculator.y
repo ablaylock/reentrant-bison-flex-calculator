@@ -1,23 +1,31 @@
-%defines
 %no-lines
-
-%code requires
-{
-	#include <string>
-}
+%pure-parser
+%defines
+%error-verbose
+%parse-param { ParseContext* context }
+%lex-param { void* scanner  }
 
 %{
 	#include <stdio.h>
 	#include <map>
-	void yyerror(char *);
-	int yylex(void);
-	std::map<std::string,std::int64_t> sym;
+	#include <string>
+	#include "parsecontext.h"
 %}
 
 %union{
 	std::string* strval;
 	std::int64_t intval;
 }
+
+%{
+
+	void yyerror(ParseContext* ctx, const char *s);
+	int yylex(YYSTYPE * yylvalp,void* scanner);
+	std::map<std::string,std::int64_t> sym;
+	#define scanner context->scanner
+%}
+
+
 
 %token <intval> INTEGER 
 %token VARIABLE 
@@ -58,7 +66,7 @@ statement:
 			#endif
 			(buff,"The symbol %s is not defined yet!",$1->c_str());
 			delete $1;
-			yyerror(buff);
+			yyerror(context,buff);
 			YYERROR;
 		}
 	}
@@ -86,15 +94,17 @@ sexpr:
 	}
 	
 %%
-void yyerror(char *s) {
+void yyerror(ParseContext* ctx,const char *s) {
+	(void) ctx;
 	fprintf(stderr, "%s\n", s);
 }
 int main(void) {
 	printf("> ");
 	int ret = 1;
+	ParseContext ctx;
 	while(ret)
 	{
-		ret = yyparse();
+		ret = yyparse(&ctx);
 		if(ret)
 			printf("> ");
 	}
