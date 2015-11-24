@@ -3,6 +3,7 @@
 %option interactive
 
 %{
+	#include <string>
 	#include "calculator.tab.h"
 	#include <stdlib.h>
 	void yyerror(char *);
@@ -14,13 +15,15 @@
 %}
 
 %%
-[a-zA-Z] {
-	yylval = *yytext;
+exit|quit { return QUIT; }
+
+[a-zA-Z]+ {
+	yylval.strval = new std::string(yytext);
 	return VARIABLE;
 }
 
 [0-9]+ {
-	yylval = atoi(yytext);
+	yylval.intval = atoi(yytext);
 	return INTEGER;
 }
 
@@ -29,10 +32,6 @@
 [-+()=*] { return *yytext; }
 
 [ \t] ; /* skip whitespace */
-
-exit|quit { return QUIT; }
-
-
 
 . yyerror("Unknown character");
 
