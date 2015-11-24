@@ -2,3 +2,5 @@
 *.o
 *.tab.*
 lex.*.c
+lex.*.cpp
+*.partial

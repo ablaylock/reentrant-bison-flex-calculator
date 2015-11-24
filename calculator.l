@@ -1,13 +1,21 @@
  /* calculator */
+%option nounistd
+%option interactive
+
 %{
 	#include "calculator.tab.h"
 	#include <stdlib.h>
 	void yyerror(char *);
+	int isatty(int fd) {return 1;}
+	
+	#ifdef _MSC_VER
+	#define fileno _fileno
+	#endif
 %}
 
 %%
-[a-z] {
-	yylval = *yytext - 'a';
+[a-zA-Z] {
+	yylval = *yytext;
 	return VARIABLE;
 }
 
@@ -16,9 +24,15 @@
 	return INTEGER;
 }
 
-[-+()=*\n] { return *yytext; }
+[\r]?\n {return NEWLINE; }
+
+[-+()=*] { return *yytext; }
 
 [ \t] ; /* skip whitespace */
+
+exit|quit { return QUIT; }
+
+
 
 . yyerror("Unknown character");
 
