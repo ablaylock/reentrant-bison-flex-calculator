@@ -44,7 +44,7 @@ expression:
 		char buff[256];
 		sprintf_s(buff,"The symbol %c is not defined yet!",$1);
 		yyerror(buff);
-		return 1;
+		YYERROR;
 	}
 	}
 	| '-' expression { $$ = -$2; }
@@ -58,5 +58,5 @@ void yyerror(char *s) {
 	fprintf(stderr, "%s\n", s);
 }
 int main(void) {
-	yyparse();
+	while(yyparse());
 }
